@@ -1,0 +1,634 @@
+/* OFast Pipeline — Client Portal Styles */
+
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.ofp-portal-body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    color: #374151;
+    min-height: 100vh;
+}
+
+/* ── Top Bar ──────────────────────────────────────────────────────────────── */
+.ofp-topbar {
+    background: #0f172a;
+    height: 60px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.ofp-sidebar-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.ofp-sidebar-toggle:hover { background: rgba(255,255,255,0.12); }
+
+.ofp-sidebar-toggle span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    background: #94a3b8;
+    border-radius: 2px;
+    margin: 0 auto;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.ofp-nav-brand {
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    white-space: nowrap;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+}
+
+.ofp-nav-brand span { color: #60a5fa; }
+
+.ofp-topbar-spacer { flex: 1; }
+
+.ofp-nav-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.ofp-nav-username {
+    font-size: 13px;
+    color: #94a3b8;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ofp-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ofp-status-dot.green  { background: #22c55e; }
+.ofp-status-dot.orange { background: #f59e0b; }
+.ofp-status-dot.yellow { background: #eab308; }
+.ofp-status-dot.red    { background: #ef4444; }
+
+/* ── Shell (sidebar + main content wrapper) ──────────────────────────────── */
+.ofp-shell {
+    display: flex;
+    margin-top: 60px;
+    min-height: calc(100vh - 60px);
+}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────── */
+.ofp-sidebar {
+    width: 240px;
+    background: #0f172a;
+    position: fixed;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    z-index: 250;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px 0;
+}
+
+.ofp-sidebar-nav ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px;
+}
+
+.ofp-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.ofp-nav-item:hover  { background: rgba(255,255,255,0.06); color: #fff; }
+.ofp-nav-item.active { background: rgba(96,165,250,0.15); color: #60a5fa; }
+.ofp-nav-item.locked { color: #475569; cursor: default; }
+.ofp-nav-item.locked:hover { background: none; color: #475569; }
+
+.ofp-nav-icon {
+    font-size: 15px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ofp-nav-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
+/* Top Up button in topbar */
+.ofp-topbar-topup {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: #1a73e8;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ofp-topbar-topup:hover  { background: #1557b0; color: #fff; }
+.ofp-topbar-topup:active { transform: scale(0.98); }
+
+.ofp-nav-label { flex: 1; }
+
+.ofp-nav-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 100px;
+    background: #1a73e8;
+    color: #fff;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.ofp-sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.ofp-nav-logout { color: #f87171 !important; }
+.ofp-nav-logout:hover { background: rgba(248,113,113,0.1) !important; }
+
+/* Backdrop shown behind sidebar when open on smaller screens */
+.ofp-sidebar-backdrop {
+    position: fixed;
+    inset: 60px 0 0 0;
+    background: rgba(15,23,42,0.5);
+    z-index: 240;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+/* ── Sidebar state: desktop (>1024px) — open by default ──────────────────── */
+@media (min-width: 1025px) {
+    .ofp-sidebar { transform: translateX(0); }
+    .ofp-main    { margin-left: 240px; }
+
+    /* .ofp-sidebar-closed is toggled by JS to collapse on desktop */
+    body.ofp-sidebar-closed .ofp-sidebar { transform: translateX(-100%); }
+    body.ofp-sidebar-closed .ofp-main    { margin-left: 0; }
+}
+
+/* ── Sidebar state: mobile/tablet (≤1024px) — closed (off-canvas) by default ── */
+@media (max-width: 1024px) {
+    .ofp-main { margin-left: 0; }
+
+    /* .ofp-sidebar-open is toggled by JS to reveal on mobile, overlaying content */
+    body.ofp-sidebar-open .ofp-sidebar          { transform: translateX(0); }
+    body.ofp-sidebar-open .ofp-sidebar-backdrop { opacity: 1; pointer-events: auto; }
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.ofp-main {
+    padding: 32px 20px;
+    flex: 1;
+    min-width: 0; /* prevents flex overflow with wide table content */
+    transition: margin-left 0.25s ease;
+}
+
+.ofp-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.ofp-page-header {
+    margin-bottom: 28px;
+}
+
+.ofp-page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.ofp-page-header p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.ofp-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.ofp-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.ofp-card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.ofp-card-header h3 { margin-bottom: 0; }
+
+/* ── Stat Grid ────────────────────────────────────────────────────────────── */
+.ofp-stats-grid {
+    display: grid;
+    grid-template-columns: repeat( auto-fit, minmax( 150px, 1fr ) );
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ofp-stat-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ofp-stat-number {
+    font-size: 30px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1;
+}
+
+.ofp-stat-number.accent { color: #1a73e8; }
+
+.ofp-stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Credit Progress Bar ─────────────────────────────────────────────────── */
+.ofp-credit-bar-wrap {
+    margin-bottom: 20px;
+}
+
+.ofp-credit-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.ofp-credit-bar-label strong { font-weight: 600; }
+
+.ofp-credit-bar-track {
+    height: 10px;
+    background: #f1f5f9;
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.ofp-credit-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.4s ease;
+}
+
+.ofp-credit-bar-fill.high   { background: #22c55e; }
+.ofp-credit-bar-fill.medium { background: #f59e0b; }
+.ofp-credit-bar-fill.low    { background: #ef4444; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+.ofp-table-wrap { overflow-x: auto; }
+
+.ofp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.ofp-table th {
+    background: #f8fafc;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ofp-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.ofp-table tr:last-child td { border-bottom: none; }
+.ofp-table tr:hover td { background: #f8fafc; }
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.ofp-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+}
+
+.ofp-badge-green  { background: #dcfce7; color: #166534; }
+.ofp-badge-blue   { background: #dbeafe; color: #1e40af; }
+.ofp-badge-yellow { background: #fef9c3; color: #854d0e; }
+.ofp-badge-orange { background: #ffedd5; color: #9a3412; }
+.ofp-badge-red    { background: #fee2e2; color: #991b1b; }
+.ofp-badge-grey   { background: #f1f5f9; color: #475569; }
+
+/* ── Alerts ───────────────────────────────────────────────────────────────── */
+.ofp-alert {
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.ofp-alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.ofp-alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.ofp-alert-warning { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; }
+.ofp-alert-info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+/* ── Info Box ─────────────────────────────────────────────────────────────── */
+.ofp-info-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #1e40af;
+    line-height: 1.6;
+}
+
+/* ── Forms ────────────────────────────────────────────────────────────────── */
+.ofp-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ofp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.ofp-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.ofp-field input,
+.ofp-field select,
+.ofp-field textarea {
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #fafafa;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    width: 100%;
+    font-family: inherit;
+}
+
+.ofp-field input:focus,
+.ofp-field select:focus,
+.ofp-field textarea:focus {
+    border-color: #1a73e8;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+}
+
+.ofp-field textarea { resize: vertical; min-height: 80px; }
+
+.ofp-hint {
+    font-size: 12px;
+    color: #9ca3af;
+    line-height: 1.5;
+}
+
+.required { color: #ef4444; }
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.ofp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    line-height: 1;
+}
+
+.ofp-btn:active { transform: scale(0.99); }
+
+.ofp-btn-primary {
+    background: #1a73e8;
+    color: #fff;
+}
+
+.ofp-btn-primary:hover { background: #1557b0; color: #fff; }
+
+.ofp-btn-secondary {
+    background: #f1f5f9;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.ofp-btn-secondary:hover { background: #e5e7eb; color: #374151; }
+
+.ofp-btn-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.ofp-btn-danger:hover { background: #fee2e2; }
+
+.ofp-form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 8px;
+}
+
+/* ── Toggle Switch ────────────────────────────────────────────────────────── */
+.ofp-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.ofp-toggle input { display: none; }
+
+.ofp-toggle-slider {
+    width: 40px;
+    height: 22px;
+    background: #e5e7eb;
+    border-radius: 100px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.ofp-toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.ofp-toggle input:checked + .ofp-toggle-slider { background: #22c55e; }
+.ofp-toggle input:checked + .ofp-toggle-slider::after { transform: translateX(18px); }
+
+.ofp-toggle-label { font-size: 13px; color: #6b7280; }
+
+/* ── Empty State ──────────────────────────────────────────────────────────── */
+.ofp-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+}
+
+.ofp-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.ofp-empty h3   { font-size: 16px; color: #6b7280; margin-bottom: 8px; }
+.ofp-empty p    { font-size: 14px; }
+
+/* ── Pagination ───────────────────────────────────────────────────────────── */
+.ofp-pagination {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.ofp-page-btn {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    color: #374151;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.ofp-page-btn:hover    { background: #f1f5f9; }
+.ofp-page-btn.active   { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+
+/* ── Subscription warning banner ─────────────────────────────────────────── */
+.ofp-sub-banner {
+    background: linear-gradient(135deg, #fef3c7, #fff);
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.ofp-sub-banner p { color: #92400e; font-size: 14px; margin: 0; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media ( max-width: 1024px ) {
+    .ofp-nav-username { display: none; } /* save space on tablet/mobile topbar */
+}
+
+@media ( max-width: 768px ) {
+    .ofp-stats-grid { grid-template-columns: repeat( 2, 1fr ); }
+    .ofp-form-row   { grid-template-columns: 1fr; }
+    .ofp-main       { padding: 20px 16px; }
+    .ofp-sidebar    { width: 260px; } /* slightly wider touch targets on mobile */
+}
+

@@ -221,6 +221,46 @@
         }
     }
 
+    // ── Theme Toggle ─────────────────────────────────────────────────────────
+    function initThemeToggle() {
+        var btn = document.getElementById('ofp-theme-toggle');
+        if ( ! btn ) return;
+        
+        var currentTheme = localStorage.getItem('ofp_theme') || 'dark';
+        if ( currentTheme === 'light' ) {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+
+        btn.addEventListener('click', function () {
+            var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            if ( isLight ) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('ofp_theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('ofp_theme', 'light');
+            }
+        });
+    }
+
+    // ── User Dropdown Toggle ─────────────────────────────────────────────────
+    function initUserDropdown() {
+        var menu = document.getElementById('ofp-user-menu');
+        var avatar = document.getElementById('ofp-user-avatar');
+        if ( ! menu || ! avatar ) return;
+
+        avatar.addEventListener('click', function (e) {
+            e.stopPropagation();
+            menu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', function (e) {
+            if ( ! menu.contains(e.target) ) {
+                menu.classList.remove('active');
+            }
+        });
+    }
+
     // ── Init all ─────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function () {
         initSidebarToggle();
@@ -231,6 +271,8 @@
         initIVRHints();
         initLeadStatusConfirm();
         initPasswordStrength();
+        initThemeToggle();
+        initUserDropdown();
     });
 
 }());

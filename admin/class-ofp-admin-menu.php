@@ -51,6 +51,7 @@ class OFP_Admin_Menu {
         add_action( 'admin_post_ofp_restore_client',  [ $this, 'handle_restore_client' ] );
         add_action( 'admin_post_ofp_preview_client',  [ $this, 'handle_preview_client' ] );
         add_action( 'admin_post_ofp_topup_credit',    [ $this, 'handle_topup_credit' ] );
+        add_action( 'admin_post_ofp_mark_subscription_paid', [ $this, 'handle_mark_subscription_paid' ] );
         add_action( 'admin_init', [ $this, 'handle_save_plan_pricing' ] );
     }
 
@@ -769,6 +770,80 @@ class OFP_Admin_Menu {
         );
 
         wp_safe_redirect( admin_url( 'admin.php?page=ofp-clients&client_id=' . $client_id ) );
+        exit;
+    }
+
+    /**
+     * Handle manually marking a pending subscription as paid.
+     * Grants the client 30 days of access, updates the row to paid,
+     * and triggers the payment confirmation email.
+     *
+     * @return void
+     */
+    public function handle_mark_subscription_paid(): void {
+
+        $this->require_admin_post( 'ofp_mark_subscription_paid' );
+
+        global $wpdb;
+
+        $sub_id = (int) ( $_POST['subscription_id'] ?? 0 );
+
+        if ( ! $sub_id ) {
+            $this->set_message( '❌ Invalid subscription ID.', 'error' );
+            wp_safe_redirect( admin_url( 'admin.php?page=ofp-billing' ) );
+            exit;
+        }
+
+        $sub = $wpdb->get_row(
+            $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}ofp_subscriptions WHERE id = %d LIMIT 1", $sub_id )
+        );
+
+        if ( ! $sub || $sub->status === 'paid' ) {
+            $this->set_message( '❌ Subscription not found or already paid.', 'error' );
+            wp_safe_redirect( admin_url( 'admin.php?page=ofp-billing' ) );
+            exit;
+        }
+
+        $period_start = gmdate( 'Y-m-d' );
+        $period_end   = gmdate( 'Y-m-d', strtotime( '+30 days' ) );
+
+        // 1. Update the pending subscription row to paid
+        $wpdb->update(
+            $wpdb->prefix . 'ofp_subscriptions',
+            [
+                'status'         => 'paid',
+                'payment_method' => 'manual',
+                'payment_ref'    => 'manual_admin_' . current_time( 'timestamp' ),
+                'period_start'   => $period_start,
+                'period_end'     => $period_end,
+                'paid_at'        => current_time( 'mysql' ),
+            ],
+            [ 'id' => $sub_id ]
+        );
+
+        // 2. Extend the client's overall subscription status and expiry
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$wpdb->prefix}ofp_clients
+                 SET status               = 'active',
+                     subscription_expires = DATE_ADD(
+                         GREATEST( IFNULL(subscription_expires, CURDATE()), CURDATE() ),
+                         INTERVAL 30 DAY
+                     ),
+                     updated_at = NOW()
+                 WHERE id = %d",
+                $sub->client_id
+            )
+        );
+
+        // 3. Send the payment confirmation email
+        $client = OFP_Client::get( (int) $sub->client_id );
+        if ( $client ) {
+            OFP_Mailer::send_payment_confirmed( $client, (float) $sub->amount, $sub->type );
+        }
+
+        $this->set_message( '✅ Subscription manually marked as paid. Client has been granted 30 days access.', 'success' );
+        wp_safe_redirect( admin_url( 'admin.php?page=ofp-billing' ) );
         exit;
     }
 

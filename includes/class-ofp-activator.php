@@ -91,6 +91,14 @@ class OFP_Activator {
             $wpdb->query( "ALTER TABLE {$p}ofp_clients ADD COLUMN reset_token_hash VARCHAR(64) DEFAULT NULL AFTER trashed_at" );
             $wpdb->query( "ALTER TABLE {$p}ofp_clients ADD COLUMN reset_token_expires DATETIME DEFAULT NULL AFTER reset_token_hash" );
         }
+
+        // logo_url column on ofp_clients (added for client profile logo uploads).
+        $logo_column_exists = $wpdb->get_results(
+            "SHOW COLUMNS FROM {$p}ofp_clients LIKE 'logo_url'"
+        );
+        if ( empty( $logo_column_exists ) ) {
+            $wpdb->query( "ALTER TABLE {$p}ofp_clients ADD COLUMN logo_url VARCHAR(255) DEFAULT NULL AFTER business_category" );
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -137,6 +145,7 @@ class OFP_Activator {
             status                 VARCHAR(20)     NOT NULL DEFAULT 'active',
             onboarding_source      VARCHAR(20)     NOT NULL DEFAULT 'manual',
             business_category      VARCHAR(50)              DEFAULT NULL,
+            logo_url               VARCHAR(255)             DEFAULT NULL,
             trashed_at             DATETIME                 DEFAULT NULL,
             subscription_expires   DATE                     DEFAULT NULL,
             setup_fee_paid         TINYINT(1)      NOT NULL DEFAULT 0,

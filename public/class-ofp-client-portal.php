@@ -56,6 +56,7 @@ class OFP_Client_Portal {
         'dashboard'         => 'dashboard.php',
         'leads'             => 'leads.php',
         'pipeline-settings' => 'pipeline-settings.php',
+        'api-settings'      => 'api-settings.php',
         'communications'    => 'communications.php',
         'credits'           => 'credits.php',
         'reports'           => 'reports.php',

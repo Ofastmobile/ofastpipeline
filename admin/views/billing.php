@@ -112,6 +112,7 @@ include OFP_PATH . 'admin/views/partials/header.php';
                     <th>Status</th>
                     <th>Period</th>
                     <th>Paid At</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -153,6 +154,18 @@ include OFP_PATH . 'admin/views/partials/header.php';
                             ?>
                         </td>
                         <td><?php echo $sub->paid_at ? esc_html( $sub->paid_at ) : '—'; ?></td>
+                        <td>
+                            <?php if ( $sub->status === 'pending' ) : ?>
+                                <form method="POST" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+                                    <?php wp_nonce_field( 'ofp_mark_subscription_paid' ); ?>
+                                    <input type="hidden" name="action" value="ofp_mark_subscription_paid">
+                                    <input type="hidden" name="subscription_id" value="<?php echo esc_attr( $sub->id ); ?>">
+                                    <button type="submit" class="button button-small button-primary" onclick="return confirm('Manually mark this subscription as PAID? This will grant the client 30 days of access and send them a receipt.');">Mark Paid</button>
+                                </form>
+                            <?php else : ?>
+                                —
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

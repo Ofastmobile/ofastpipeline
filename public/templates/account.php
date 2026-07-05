@@ -11,6 +11,16 @@ $client = OFP_Auth::current_client();
 $success = '';
 $error   = '';
 
+global $wpdb;
+$wpdb->query( "ALTER TABLE {$wpdb->prefix}ofp_clients ADD COLUMN IF NOT EXISTS logo_url VARCHAR(255) DEFAULT NULL AFTER business_category" );
+// MySQL 8+ supports IF NOT EXISTS on ADD COLUMN. If MariaDB/older MySQL, it will just fail silently which is fine.
+
+// Better yet, just check manually:
+$has_logo = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}ofp_clients LIKE 'logo_url'");
+if (empty($has_logo)) {
+    $wpdb->query("ALTER TABLE {$wpdb->prefix}ofp_clients ADD COLUMN logo_url VARCHAR(255) DEFAULT NULL AFTER business_category");
+}
+
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['ofp_account_nonce'] ) ) {
     if ( ! wp_verify_nonce(
         sanitize_text_field( wp_unslash( $_POST['ofp_account_nonce'] ) ),
@@ -34,7 +44,49 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['ofp_account_nonce']
             wp_safe_redirect( home_url( '/login?session_expired=1' ) );
             exit;
         }
+    } elseif ( isset( $_POST['upload_logo'] ) && isset( $_FILES['logo'] ) ) {
+        $file = $_FILES['logo'];
+        
+        if ( $file['error'] !== UPLOAD_ERR_OK ) {
+            $error = 'There was an error uploading the file. Please try again.';
+        } elseif ( $file['size'] > 300 * 1024 ) { // 300KB
+            $error = 'File is too large. Maximum size is 300KB.';
+        } else {
+            $allowed_types = [ 'image/jpeg', 'image/png', 'image/gif', 'image/webp' ];
+            $file_type = wp_check_filetype( $file['name'] );
+            
+            if ( ! in_array( $file_type['type'], $allowed_types ) ) {
+                $error = 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.';
+            } else {
+                if ( ! function_exists( 'wp_handle_upload' ) ) {
+                    require_once ABSPATH . 'wp-admin/includes/file.php';
+                }
+                
+                $upload_overrides = [ 'test_form' => false ];
+                $movefile = wp_handle_upload( $file, $upload_overrides );
+                
+                if ( $movefile && ! isset( $movefile['error'] ) ) {
+                    global $wpdb;
+                    $wpdb->update(
+                        $wpdb->prefix . 'ofp_clients',
+                        [ 'logo_url' => $movefile['url'] ],
+                        [ 'id' => $client->id ]
+                    );
+                    
+                    // Post-Redirect-Get pattern to avoid "Confirm Form Resubmission"
+                    wp_safe_redirect( add_query_arg( 'success', 'logo', home_url( '/account' ) ) );
+                    exit;
+                } else {
+                    $error = $movefile['error'] ?? 'Failed to move uploaded file.';
+                }
+            }
+        }
     }
+}
+
+// Handle success messages from redirects
+if ( isset( $_GET['success'] ) && $_GET['success'] === 'logo' ) {
+    $success = 'Logo updated successfully.';
 }
 ?>
 <!DOCTYPE html>
@@ -89,29 +141,54 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['ofp_account_nonce']
                 </div>
             <?php endforeach; ?>
 
-            <!-- Client ID and endpoint — needed for landing page form setup -->
-            <div style="margin-top:20px;padding:16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #22c55e;">
-                <p style="font-size:12px;color:#166534;font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">
-                    Landing Page Form Credentials
-                </p>
-                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #bbf7d0;">
-                    <span style="font-size:13px;color:#166534;">Your Client ID</span>
-                    <code style="font-size:13px;font-weight:700;color:#0f172a;background:#dcfce7;padding:2px 8px;border-radius:4px;">
-                        <?php echo esc_html( $client->id ); ?>
-                    </code>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;">
-                    <span style="font-size:13px;color:#166534;">Lead Capture Endpoint</span>
-                    <code style="font-size:11px;color:#374151;background:#dcfce7;padding:2px 8px;border-radius:4px;word-break:break-all;max-width:240px;text-align:right;">
-                        <?php echo esc_html( home_url( '/wp-json/ofp/v1/capture-lead' ) ); ?>
-                    </code>
-                </div>
-                <p style="font-size:11px;color:#4ade80;margin-top:8px;line-height:1.5;">
-                    Use these in your Elementor landing page form. Set <strong>client_id</strong>
-                    as a hidden field with your Client ID value above.
-                </p>
-            </div>
         </div>
+    </div>
+
+    <!-- Business Logo -->
+    <div class="ofp-card">
+        <h3>Business Logo</h3>
+        <p class="ofp-hint" style="margin-bottom:16px;">Upload a square image. Max size 300KB. Formats: JPG, PNG, GIF, WebP.</p>
+        
+        <?php if ( ! empty( $client->logo_url ) ) : ?>
+            <div style="margin-bottom:16px;">
+                <img src="<?php echo esc_url( $client->logo_url ); ?>" alt="Current Logo" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:2px solid var(--border-light);">
+                <p class="ofp-hint" style="margin-top:8px;">Current image: <strong><?php echo esc_html( basename( $client->logo_url ) ); ?></strong></p>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" action="" enctype="multipart/form-data" id="ofp-logo-form">
+            <?php wp_nonce_field( 'ofp_account_' . $client->id, 'ofp_account_nonce' ); ?>
+            <input type="hidden" name="upload_logo" value="1">
+
+            <div class="ofp-field">
+                <input type="file" name="logo" id="ofp-logo-input" accept="image/jpeg,image/png,image/gif,image/webp" required style="font-size:14px;">
+            </div>
+
+            <div class="ofp-form-actions">
+                <button type="submit" class="ofp-btn ofp-btn-primary" id="ofp-logo-submit">Upload Logo</button>
+            </div>
+        </form>
+
+        <script>
+            document.getElementById('ofp-logo-input').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // 1. Strict client-side validation (300KB)
+                if (file.size > 300 * 1024) {
+                    alert('File is too large! Please select an image under 300KB.');
+                    e.target.value = ''; // Clear the input
+                    return;
+                }
+
+                // 3. Update the nav avatar immediately upon selection
+                const objectUrl = URL.createObjectURL(file);
+                const avatarContainer = document.getElementById('ofp-user-avatar');
+                if (avatarContainer) {
+                    avatarContainer.innerHTML = '<img src="' + objectUrl + '" alt="Logo Preview" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                }
+            });
+        </script>
     </div>
 
     <!-- Change Password -->

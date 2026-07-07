@@ -53,6 +53,7 @@ class OFP_Admin_Menu {
         add_action( 'admin_post_ofp_topup_credit',    [ $this, 'handle_topup_credit' ] );
         add_action( 'admin_post_ofp_mark_subscription_paid', [ $this, 'handle_mark_subscription_paid' ] );
         add_action( 'admin_init', [ $this, 'handle_save_plan_pricing' ] );
+        add_action( 'admin_init', [ $this, 'handle_save_listing_plans' ] );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -482,7 +483,44 @@ class OFP_Admin_Menu {
     }
 
     /**
-     * Handle saving the Settings page (super_admin only).
+     * Handles the Settings > Listing Plans form submission (Phase 14).
+     *
+     * @return void
+     */
+    public function handle_save_listing_plans(): void {
+        if ( empty( $_POST['ofp_save_listing_plans'] ) ) {
+            return;
+        }
+
+        if ( ! OFP_Auth::is_admin_user() ) {
+            return;
+        }
+
+        if ( OFP_Auth::current_admin_role() !== 'super_admin' ) {
+            wp_die( 'Access denied. Only the super admin can change pricing.' );
+        }
+
+        check_admin_referer( 'ofp_save_listing_plans_action', 'ofp_listing_plans_nonce' );
+
+        $prices = [];
+        $caps   = [];
+
+        foreach ( OFP_Property_CPT::PLAN_KEYS as $plan ) {
+            $prices[ $plan ] = isset( $_POST[ "listing_price_{$plan}" ] ) ? (float) $_POST[ "listing_price_{$plan}" ] : 0.0;
+            $caps[ $plan ]   = isset( $_POST[ "listing_cap_{$plan}" ] )   ? (int) $_POST[ "listing_cap_{$plan}" ]   : 1;
+        }
+
+        OFP_Property_CPT::save_plans( $prices, $caps );
+
+        add_action( 'admin_notices', function () {
+            echo '<div class="notice notice-success is-dismissible"><p>'
+                . esc_html__( 'Listing plans updated.', 'ofast-pipeline' )
+                . '</p></div>';
+        } );
+    }
+
+    /**
+     * Handle saving plugin settings.
      *
      * @return void
      */

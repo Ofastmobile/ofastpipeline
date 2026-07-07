@@ -37,6 +37,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class OFP_Property_CPT {
 
+    const PLAN_KEYS = [ 'bronze', 'silver', 'gold' ];
+
+    const DEFAULT_PLAN_PRICES = [
+        'bronze' => 7500.00,
+        'silver' => 15000.00,
+        'gold'   => 30000.00,
+    ];
+
+    const DEFAULT_PLAN_CAPS = [
+        'bronze' => 3,
+        'silver' => 10,
+        'gold'   => 25,
+    ];
+
     public function __construct() {
         add_action( 'init',                    [ $this, 'register_post_type' ] );
         add_action( 'init',                    [ $this, 'register_taxonomies' ] );
@@ -44,6 +58,7 @@ class OFP_Property_CPT {
         add_action( 'save_post_ofp_property',  [ $this, 'save_meta' ] );
         add_filter( 'manage_ofp_property_posts_columns',       [ $this, 'custom_columns' ] );
         add_action( 'manage_ofp_property_posts_custom_column', [ $this, 'render_columns' ], 10, 2 );
+        add_filter( 'template_include',                        [ $this, 'load_templates' ] );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -492,5 +507,99 @@ class OFP_Property_CPT {
                     . '</span>';
                 break;
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUBLIC TEMPLATES & PRICING HELPERS (Phase 14)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function load_templates( string $template ): string {
+        if ( is_post_type_archive( 'ofp_property' ) ) {
+            $theme_override = locate_template( 'archive-ofp_property.php' );
+            if ( $theme_override ) return $theme_override;
+            return OFP_PLUGIN_DIR . 'public/templates/property-archive.php';
+        }
+
+        if ( is_singular( 'ofp_property' ) ) {
+            $theme_override = locate_template( 'single-ofp_property.php' );
+            if ( $theme_override ) return $theme_override;
+            return OFP_PLUGIN_DIR . 'public/templates/property-single.php';
+        }
+
+        return $template;
+    }
+
+    public static function get_plan_prices(): array {
+        $prices = [];
+        foreach ( self::PLAN_KEYS as $plan ) {
+            $prices[ $plan ] = (float) get_option( "ofp_listing_price_{$plan}", self::DEFAULT_PLAN_PRICES[ $plan ] );
+        }
+        return $prices;
+    }
+
+    public static function get_plan_caps(): array {
+        $caps = [];
+        foreach ( self::PLAN_KEYS as $plan ) {
+            $caps[ $plan ] = (int) get_option( "ofp_listing_cap_{$plan}", self::DEFAULT_PLAN_CAPS[ $plan ] );
+        }
+        return $caps;
+    }
+
+    public static function get_plan_price( ?string $plan ): float {
+        if ( ! $plan || ! in_array( $plan, self::PLAN_KEYS, true ) ) return 0.0;
+        return (float) get_option( "ofp_listing_price_{$plan}", self::DEFAULT_PLAN_PRICES[ $plan ] );
+    }
+
+    public static function get_plan_cap( ?string $plan ): int {
+        if ( ! $plan || ! in_array( $plan, self::PLAN_KEYS, true ) ) return 0;
+        return (int) get_option( "ofp_listing_cap_{$plan}", self::DEFAULT_PLAN_CAPS[ $plan ] );
+    }
+
+    public static function save_plans( array $prices, array $caps ): bool {
+        foreach ( self::PLAN_KEYS as $plan ) {
+            $price = isset( $prices[ $plan ] ) ? max( 0.0, (float) $prices[ $plan ] ) : self::DEFAULT_PLAN_PRICES[ $plan ];
+            $cap   = isset( $caps[ $plan ] )   ? max( 1, (int) $caps[ $plan ] )       : self::DEFAULT_PLAN_CAPS[ $plan ];
+            update_option( "ofp_listing_price_{$plan}", $price );
+            update_option( "ofp_listing_cap_{$plan}", $cap );
+        }
+        return true;
+    }
+
+    public static function count_for_client( int $client_id ): int {
+        $query = new WP_Query( [
+            'post_type'      => 'ofp_property',
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'meta_key'       => 'ofp_client_id',
+            'meta_value'     => $client_id,
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+        ] );
+        return count( $query->posts );
+    }
+
+    public static function can_add_property( int $client_id ): bool {
+        $plan = OFP_Subscription::get_active_listing_plan( $client_id );
+        if ( ! $plan ) return false;
+
+        $cap = self::get_plan_cap( $plan );
+        return self::count_for_client( $client_id ) < $cap;
+    }
+
+    public static function get_client_properties( int $client_id ): array {
+        $query = new WP_Query( [
+            'post_type'      => 'ofp_property',
+            'post_status'    => [ 'publish', 'pending', 'draft' ],
+            'meta_key'       => 'ofp_client_id',
+            'meta_value'     => $client_id,
+            'posts_per_page' => -1,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+        ] );
+        return $query->posts;
+    }
+
+    public static function is_owned_by( int $post_id, int $client_id ): bool {
+        return (int) get_post_meta( $post_id, 'ofp_client_id', true ) === $client_id;
     }
 }

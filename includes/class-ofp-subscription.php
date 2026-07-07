@@ -349,10 +349,32 @@ class OFP_Subscription {
         );
 
         if ( $has_listing ) {
-            $total += self::get_listing_fee();
+            $total += OFP_Property_CPT::get_plan_price( self::get_active_listing_plan( $client_id ) );
         }
 
         return $total;
+    }
+
+    /**
+     * The client's currently active listing plan tier ('bronze'|'silver'|'gold'),
+     * or null if they have no active listing subscription at all.
+     *
+     * Phase 14: listing subscriptions now carry a plan tier in the same
+     * `plan` column CRM subscriptions already use.
+     *
+     * @param int $client_id
+     * @return string|null
+     */
+    public static function get_active_listing_plan( int $client_id ): ?string {
+        global $wpdb;
+        $row = $wpdb->get_row( $wpdb->prepare( "
+            SELECT plan FROM {$wpdb->prefix}ofp_subscriptions
+            WHERE client_id = %d AND type = 'listing' AND status = 'paid'
+            AND (period_end IS NULL OR period_end >= CURDATE())
+            ORDER BY period_end DESC LIMIT 1
+        ", $client_id ) );
+
+        return $row ? $row->plan : null;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

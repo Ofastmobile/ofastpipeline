@@ -62,6 +62,7 @@ class OFP_Client_Portal {
         'reports'           => 'reports.php',
         'account'           => 'account.php',
         'my-listing'        => 'my-listing.php',        // v2.1 — property listing management
+        'properties'        => 'properties.php',        // Phase 14 — tiered property listing management
     ];
 
     /**
